@@ -2,171 +2,241 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Poster Skies — WebAR</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#080e22">
+<title>POSTER SKIES // AR EXPERIENCE</title>
 <script src="./lib/aframe.min.js"></script>
 <script src="./lib/mindar-image-aframe.prod.js"></script>
 <style>
-  html,body{margin:0;height:100%;overflow:hidden;font-family:system-ui,sans-serif}
-  #hud{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;z-index:10;pointer-events:none;color:#fff;text-shadow:0 1px 4px #000}
-  #score{font-weight:800;font-size:22px}
-  #credit{font-size:12px;opacity:.85;text-align:right}
-  #hint{position:fixed;bottom:18px;left:0;right:0;text-align:center;color:#fff;text-shadow:0 1px 4px #000;z-index:10;pointer-events:none;font-size:14px}
-  #info{position:fixed;left:12px;right:12px;bottom:60px;background:rgba(20,24,40,.88);color:#fff;border-radius:12px;padding:12px 14px;z-index:11;display:none;font-size:14px}
-  #start{position:fixed;inset:0;background:#10182c;color:#fff;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
-  #start button{margin-top:18px;font-size:18px;padding:12px 28px;border:0;border-radius:999px;background:#ffcf33;font-weight:700}
+:root{--cyan:#58e8ff;--gold:#ffd45b;--ink:#080e22;--glass:rgba(7,13,31,.72)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:#fff}a-scene{position:fixed!important;inset:0;z-index:1}
+#boot{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 20%,#244c80 0,#111b3c 42%,#070b19 100%);text-align:center}
+.boot-card{width:min(520px,100%);padding:30px 24px;border:1px solid #ffffff26;border-radius:28px;background:linear-gradient(145deg,#ffffff15,#ffffff06);box-shadow:0 30px 100px #0009;backdrop-filter:blur(20px)}
+.kicker{font-size:10px;letter-spacing:.32em;color:var(--cyan);font-weight:900}.logo{font-size:clamp(38px,10vw,68px);line-height:.9;font-weight:1000;letter-spacing:-.07em;margin:15px 0 12px;text-shadow:0 5px 0 #163b65,0 12px 36px #0009}.logo span{color:var(--gold)}.boot-card p{max-width:360px;margin:14px auto 22px;color:#d7e8ff;line-height:1.55;font-size:14px}
+button{font:inherit;cursor:pointer;border:0}.primary{padding:14px 25px;border-radius:999px;color:#10172a;font-weight:950;letter-spacing:.06em;background:linear-gradient(110deg,#fff09b,#ffc83d);box-shadow:0 8px 28px #ffbf3150;min-width:180px}.fine{font-size:10px;color:#9fb5d3;margin-top:15px}
+#interface{position:fixed;inset:0;z-index:12;pointer-events:none;display:none;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.brand{font-weight:1000;letter-spacing:.12em;font-size:11px;text-shadow:0 2px 10px #000}.brand small{display:block;color:var(--cyan);font-size:8px;letter-spacing:.24em;margin-top:3px}.stat{border:1px solid #ffffff35;background:var(--glass);backdrop-filter:blur(12px);border-radius:14px;padding:8px 12px;text-align:right;box-shadow:0 8px 24px #0004}.stat b{display:block;font-size:20px;line-height:1}.stat span{font-size:8px;letter-spacing:.18em;color:#a9c8e9}
+#status{position:absolute;top:76px;left:50%;transform:translateX(-50%);white-space:nowrap;border:1px solid #ffffff2b;background:#071329b8;border-radius:999px;padding:8px 13px;font-size:10px;letter-spacing:.12em;color:#d8f8ff;backdrop-filter:blur(10px)}
+.bottom{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:9px;align-items:center}.model-strip{pointer-events:auto;display:flex;gap:7px;justify-content:center;flex-wrap:wrap;width:100%}.chip{border:1px solid #ffffff35;color:#e9f7ff;background:#071329d9;padding:8px 11px;border-radius:999px;font-size:10px;font-weight:800;backdrop-filter:blur(10px)}.chip.active{color:#10182a;background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 22px #58e8ff55}.actions{display:flex;gap:8px;pointer-events:auto}.action{padding:12px 17px;border-radius:14px;font-weight:950;font-size:11px;letter-spacing:.08em;color:#091328;background:#fff;box-shadow:0 8px 24px #0005}.action.hot{background:linear-gradient(110deg,#ffe99b,#ffb92d)}.action.ghost{background:#071329d9;color:#fff;border:1px solid #ffffff35}
+#toast{position:absolute;left:50%;bottom:155px;transform:translate(-50%,12px);opacity:0;transition:.25s;background:#061329e8;border:1px solid #58e8ff66;padding:10px 14px;border-radius:12px;font-size:11px;max-width:90%;text-align:center;box-shadow:0 10px 30px #0008}#toast.show{opacity:1;transform:translate(-50%,0)}
+#reticle{position:absolute;inset:0;pointer-events:none;display:grid;place-items:center;opacity:.0;transition:.3s}#reticle:after{content:'';width:42px;height:42px;border:1px solid #7beeff80;border-radius:50%;box-shadow:0 0 0 8px #7beeff12,0 0 30px #58e8ff55}
+@media(min-width:700px){.bottom{left:auto;right:20px;bottom:20px;align-items:flex-end}.model-strip{max-width:360px}.actions{justify-content:flex-end}#status{top:86px}}
 </style>
 </head>
 <body>
-<div id="start">
-  <h1 style="margin:0 0 8px">Poster Skies</h1>
-  <p style="max-width:320px;opacity:.85">Point your camera at the poster. A flock of critters will take off from it &mdash; tap one to send it flying.</p>
-  <button id="go">Start</button>
-</div>
-<div id="hud"><div id="score">Launched: 0</div><div id="credit">Ratik Reddy &middot; SC24UCOM025</div></div>
-<div id="info"></div>
-<div id="hint">Looking for the poster&hellip;</div>
+<div id="boot"><div class="boot-card"><div class="kicker">AN INTERACTIVE AUGMENTED REALITY EXPERIMENT</div><div class="logo">POSTER<br><span>SKIES</span></div><p>Bring the poster to life. Scan it, meet the characters, launch them into the sky and trigger a spectacular chain reaction.</p><button class="primary" id="startBtn">ENTER EXPERIENCE&nbsp; ↗</button><div class="fine">BEST EXPERIENCED ON MOBILE · ALLOW CAMERA ACCESS</div></div></div>
+<div id="interface"><div class="topbar"><div class="brand">POSTER SKIES<small>AR FIELD SYSTEM // 01</small></div><div class="stat"><b id="score">000</b><span>LAUNCHES</span></div></div><div id="status">SEARCHING FOR POSTER SIGNAL…</div><div id="reticle"></div><div class="bottom"><div class="model-strip" id="modelStrip"><button class="chip active" data-model="terence">TERENCE</button><button class="chip" data-model="matilda">MATILDA</button><button class="chip" data-model="jake">JAKE</button><button class="chip" data-model="pig">PIG</button></div><div class="actions"><button class="action ghost" id="resetBtn">↺ RESET</button><button class="action" id="burstBtn">✦ BURST</button><button class="action hot" id="launchBtn">LAUNCH SELECTED ↗</button></div></div><div id="toast"></div></div>
+<a-scene mindar-image="imageTargetSrc: ./assets/poster.mind; autoStart: false; uiScanning: no; uiLoading: no; filterMinCF: 0.0001; filterBeta: 0.001" renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true" color-space="sRGB" embedded vr-mode-ui="enabled:false" device-orientation-permission-ui="enabled:false" loading-screen="enabled:false" shadow="type: pcfsoft" ar-director>
+ <a-assets>
+  <a-asset-item id="terenceModel" src="./assets/models/terence.glb"></a-asset-item>
+  <a-asset-item id="matildaModel" src="./assets/models/matilda.glb"></a-asset-item>
+  <a-asset-item id="jakeModel" src="./assets/models/jake.glb"></a-asset-item>
+  <a-asset-item id="pigModel" src="./assets/models/pig.glb"></a-asset-item>
+ </a-assets>
+ <a-camera position="0 0 0" look-controls="enabled:false" cursor="rayOrigin:mouse; fuse:false" raycaster="objects:.interactive; far:20"></a-camera>
+ <a-entity id="posterAnchor" mindar-image-target="targetIndex:0">
+  <a-entity id="arStage">
+    <a-light type="ambient" intensity="1.25" color="#d9f5ff"></a-light>
+    <a-light type="directional" intensity="1.8" color="#fff0cf" position="-.5 1 1"></a-light>
+    <a-light type="point" intensity="1.4" distance="2.5" color="#38cfff" position="0 .2 .5"></a-light>
 
-<a-scene mindar-image="imageTargetSrc: ./assets/poster.mind; autoStart: false; uiScanning: no; uiLoading: no; filterMinCF:0.0001; filterBeta:0.001"
-         color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true"
-         embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false"
-         game-logic>
-  <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse" raycaster="far: 10000; objects: .tap"></a-camera>
-  <a-entity mindar-image-target="targetIndex: 0" id="target">
-    <a-light type="ambient" intensity="1.1"></a-light>
-    <a-light type="directional" intensity="1.4" position="0.5 1 1"></a-light>
-    <a-entity id="flock"></a-entity>
-    <a-entity id="nodes"></a-entity>
+    <a-entity id="worldFx"></a-entity>
+    <a-entity id="characters"></a-entity>
+    <a-entity id="projectiles"></a-entity>
+    <a-entity id="infoOrbs"></a-entity>
   </a-entity>
+ </a-entity>
 </a-scene>
-
 <script>
-/* ---------- config: edit this list to change the flock ---------- */
-const CRITTERS = [
-  {color:'#2ec4b6', crest:'#ff9f1c', scale:1.0},
-  {color:'#ff7f50', crest:'#3d405b', scale:1.2},
-  {color:'#9b5de5', crest:'#f9c74f', scale:0.9},
-  {color:'#8ac926', crest:'#e63946', scale:1.1},
-  {color:'#f15bb5', crest:'#00bbf9', scale:0.8},
-  {color:'#4cc9f0', crest:'#f72585', scale:1.3},
-];
-/* Info nodes: x,y in poster units (poster width = 1, height = 0.625), centered at 0,0 */
-const NODES = [
-  {x:-0.33, y: 0.15, text:'Info node 1: edit me in the NODES list in index.html'},
-  {x: 0.0,  y:-0.1,  text:'Info node 2: tap a critter to launch it!'},
-  {x: 0.33, y: 0.18, text:'Info node 3: score counts every launch.'},
-];
-/* ---------- procedural sounds (no audio files needed) ---------- */
-let actx;
-function blip(f0,f1,dur,type='square',vol=.12){
-  if(!actx) return;
-  const o=actx.createOscillator(), g=actx.createGain();
-  o.type=type; o.frequency.setValueAtTime(f0,actx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(f1,actx.currentTime+dur);
-  g.gain.setValueAtTime(vol,actx.currentTime); g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+dur);
-  o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime+dur);
-}
-const sfx={ launch:()=>{blip(300,1200,.35,'sawtooth');setTimeout(()=>blip(900,500,.15,'triangle'),200)},
-            node:()=>blip(600,900,.12,'sine',.15) };
+(()=>{
+ const $=id=>document.getElementById(id),
+       scene=document.querySelector('a-scene'),
+       anchor=$('posterAnchor'),
+       stage=$('arStage');
 
-/* ---------- critter: original round creature built from primitives ---------- */
-AFRAME.registerComponent('critter',{
-  schema:{color:{default:'#fff'},crest:{default:'#f90'}},
-  init(){
-    const el=this.el, d=this.data, mk=(tag,attrs,parent=el)=>{const e=document.createElement(tag);for(const k in attrs)e.setAttribute(k,attrs[k]);parent.appendChild(e);return e;};
-    mk('a-sphere',{radius:.05,color:d.color,'segments-width':16,'segments-height':12,class:'tap'});
-    mk('a-sphere',{radius:.03,color:'#fff',position:'-.02 .015 .042',scale:'1 1.1 .6'});
-    mk('a-sphere',{radius:.03,color:'#fff',position:'.02 .015 .042',scale:'1 1.1 .6'});
-    mk('a-sphere',{radius:.012,color:'#111',position:'-.016 .012 .058'});
-    mk('a-sphere',{radius:.012,color:'#111',position:'.016 .012 .058'});
-    mk('a-cone',{'radius-bottom':.012,'radius-top':0,height:.035,color:'#ffd166',position:'0 -.012 .06',rotation:'90 0 0'});
-    for(let i=-1;i<=1;i++) mk('a-cone',{'radius-bottom':.01,'radius-top':0,height:.05,color:d.crest,position:`${i*.02} .055 0`,rotation:`0 0 ${-i*22}`});
-    this.wL=mk('a-sphere',{radius:.025,color:d.color,position:'-.05 0 0',scale:'.4 1 1'});
-    this.wR=mk('a-sphere',{radius:.025,color:d.color,position:'.05 0 0',scale:'.4 1 1'});
-  },
-  tick(t){ const f=Math.sin(t/70+this.el.object3D.id)*25; this.wL.object3D.rotation.z=f*Math.PI/180; this.wR.object3D.rotation.z=-f*Math.PI/180; }
-});
+ let stageDetached=false;
 
-/* ---------- game logic ---------- */
-AFRAME.registerComponent('game-logic',{
-  init(){
-    const scene=this.el, flock=document.getElementById('flock'), nodes=document.getElementById('nodes');
-    this.critters=[]; this.score=0; this.trail=[];
-    this.W=.62; // half-width of flight area in poster units
+ const MODELS={
+  terence:{name:'TERENCE',asset:'#terenceModel',scale:.0022,pos:'-.32 -.06 .12',rot:'0 0 0',color:'#e94b50',info:'The heavyweight. Big energy, bigger launch.'},
+  matilda:{name:'MATILDA',asset:'#matildaModel',scale:.00235,pos:'-.105 -.055 .12',rot:'0 0 0',color:'#fff0dc',info:'The sky guardian. Calm before the chaos.'},
+  jake:{name:'JAKE',asset:'#jakeModel',scale:.014,pos:'.115 -.055 .12',rot:'0 0 0',color:'#ff9d36',info:'A movie-star troublemaker, ready for takeoff.'},
+  pig:{name:'PIG',asset:'#pigModel',scale:.014,pos:'.33 -.055 .12',rot:'0 180 0',color:'#7bea9b',info:'The green troublemaker. Definitely up to something.'}
+ };
+ let selected='terence',launches=0,found=false,audio=null,entities={},particles=[],projectiles=[],lastTick=0;
+ function sound(freq=420,duration=.22,type='sawtooth',volume=.08){if(!audio)return;const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.setValueAtTime(freq,audio.currentTime);o.frequency.exponentialRampToValueAtTime(Math.max(60,freq*.35),audio.currentTime+duration);g.gain.setValueAtTime(volume,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);o.connect(g).connect(audio.destination);o.start();o.stop(audio.currentTime+duration)}
+ function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').classList.remove('show'),2100)}
+ function make(tag,attrs,parent){const e=document.createElement(tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));parent.appendChild(e);return e}
+ function addEnvironment(){const fx=$('worldFx');
+  for(let i=0;i<36;i++){let x=(Math.random()-.5)*1.05,y=(Math.random()-.5)*.62,z=-.02-Math.random()*.2;let p=make('a-sphere',{radius:.002+Math.random()*.003,color:i%3?'#a9f5ff':'#ffd76a',opacity:.35+Math.random()*.55,position:`${x} ${y} ${z}`,'animation__float':`property: position; to: ${x} ${y+.035+Math.random()*.04} ${z}; dir: alternate; dur: ${1800+Math.random()*2600}; loop: true; easing: easeInOutSine`},fx);}
+  for(let i=0;i<3;i++){make('a-torus',{radius:.12+i*.085,'radius-tubular':.0015,color:i===1?'#ffcf56':'#4ce4ff',opacity:.5,position:`0 0 ${-.04-i*.018}`,rotation:`${70+i*18} 0 ${i*24}`,'animation__spin':`property: rotation; to: ${70+i*18} 360 ${i*24}; dur: ${12000+i*4000}; loop: true`},fx)}
+  for(let i=0;i<4;i++){make('a-sphere',{radius:.009,color:'#ffcf56',opacity:.8,position:`${-.42+i*.28} ${i%2?.24:-.24} .01`,'animation__pulse':'property: scale; to: 1.6 1.6 1.6; dir: alternate; dur: 900; loop: true'},$('infoOrbs'));}
+ }
+ function createCharacters(){
+  const root=$('characters');
 
-    CRITTERS.forEach((c,i)=>{
-      const e=document.createElement('a-entity');
-      e.setAttribute('critter',{color:c.color,crest:c.crest});
-      e.object3D.scale.setScalar(c.scale);
-      flock.appendChild(e);
-      const s={e,i,mode:'fly',dir:(i%2?1:-1),speed:.05+Math.random()*.05,baseY:-.2+Math.random()*.4,
-               z:.06+Math.random()*.2,phase:Math.random()*6,vx:0,vy:0,vz:0};
-      s.e.object3D.position.set((Math.random()-.5)*1.2,s.baseY,s.z);
-      e.addEventListener('click',()=>this.launch(s));
-      this.critters.push(s);
+  Object.entries(MODELS).forEach(([id,m])=>{
+    const holder=make('a-entity',{
+      id:`character-${id}`,
+      position:m.pos,
+      rotation:m.rot,
+      scale:`${m.scale} ${m.scale} ${m.scale}`,
+      class:'interactive'
+    },root);
+
+    const model=make('a-entity',{
+      'gltf-model':m.asset,
+      rotation:'0 0 0',
+      class:'interactive'
+    },holder);
+
+    model.addEventListener('model-loaded',()=>{
+      if(id==='terence') toast('3D FLOCK ONLINE · TAP A BIRD');
     });
 
-    NODES.forEach(n=>{
-      const e=document.createElement('a-sphere');
-      e.setAttribute('radius',.018); e.setAttribute('color','#ffcf33'); e.setAttribute('class','tap');
-      e.setAttribute('position',`${n.x} ${n.y} .02`);
-      e.setAttribute('animation','property: scale; dir: alternate; dur: 700; loop: true; to: 1.4 1.4 1.4; easing: easeInOutSine');
-      e.addEventListener('click',()=>{ const i=document.getElementById('info'); i.textContent=n.text; i.style.display='block'; sfx.node(); clearTimeout(this.it); this.it=setTimeout(()=>i.style.display='none',3500); });
-      nodes.appendChild(e);
+    holder.addEventListener('click',()=>{
+      select(id,false);
+      launch(id);
     });
 
-    const hint=document.getElementById('hint');
-    document.getElementById('target').addEventListener('targetFound',()=>{hint.style.display='none';});
-    document.getElementById('target').addEventListener('targetLost',()=>{hint.style.display='block';hint.textContent='Poster lost — point the camera back at it';});
+    entities[id]={holder,model,mode:'idle',velocity:null};
+  });
 
-    // start button: unlocks audio (needs a user gesture) and starts AR
-    document.getElementById('go').onclick=async()=>{
-      actx=new (window.AudioContext||window.webkitAudioContext)();
-      document.getElementById('start').style.display='none';
-      const sys=scene.systems['mindar-image-system']; sys.start();
-    };
-  },
-  launch(s){
-    if(s.mode==='launched') return;
-    s.mode='launched'; sfx.launch();
-    this.score++; document.getElementById('score').textContent='Launched: '+this.score;
-    const a=(Math.random()*.9+.2)*(Math.random()<.5?-1:1);
-    s.vx=Math.sin(a)*.9; s.vy=.35+Math.random()*.5; s.vz=.9+Math.random()*.6; s.life=0;
-    // keep flying: it respawns on the other side after leaving
-  },
-  tick(t,dt){
-    dt=Math.min(dt,50)/1000;
-    for(const s of this.critters){
-      const p=s.e.object3D.position;
-      if(s.mode==='fly'){
-        p.x+=s.dir*s.speed*dt; p.y=s.baseY+Math.sin(t/600+s.phase)*.04;
-        s.e.object3D.rotation.y=s.dir>0?Math.PI/2.6:-Math.PI/2.6;
-        if(p.x>this.W) s.dir=-1; if(p.x<-this.W) s.dir=1;
-      } else {
-        s.life+=dt; p.x+=s.vx*dt; p.y+=s.vy*dt; p.z+=s.vz*dt;
-        s.e.object3D.rotation.z+=dt*9;
-        if(Math.random()<.5) this.puff(p);
-        if(s.life>2.2){ // respawn
-          s.mode='fly'; s.e.object3D.rotation.z=0; s.dir=Math.random()<.5?-1:1;
-          p.set(-s.dir*this.W,s.baseY,s.z);
-        }
-      }
-    }
-    for(let i=this.trail.length-1;i>=0;i--){
-      const q=this.trail[i]; q.life-=dt; const k=Math.max(q.life/.5,0);
-      q.e.object3D.scale.setScalar(k);
-      if(q.life<=0){q.e.parentNode.removeChild(q.e);this.trail.splice(i,1);}
-    }
-  },
-  puff(p){
-    if(this.trail.length>80) return;
-    const e=document.createElement('a-sphere');
-    e.setAttribute('radius',.012); e.setAttribute('color','#ffffff'); e.setAttribute('opacity',.8);
-    e.setAttribute('position',`${p.x} ${p.y} ${p.z}`);
-    document.getElementById('flock').appendChild(e);
-    this.trail.push({e,life:.5});
+  select(selected,false);
+ }
+ function select(id,notify=true){
+  selected=id;
+
+  document.querySelectorAll('.chip').forEach(b=>{
+    b.classList.toggle('active',b.dataset.model===id);
+  });
+
+  if(notify){
+    toast(`${MODELS[id].name} SELECTED · ${MODELS[id].info}`);
   }
-});
+ }
+ function burst(){Object.entries(entities).forEach(([id])=>launch(id,true));toast('FLOCK BURST INITIATED');sound(180,.5,'sawtooth',.1)}
+ function launch(id=selected,all=false){
+  const v=entities[id];
+  if(!v || v.mode==='launched') return;
+
+  v.mode='launched';
+  v.life=0;
+
+  v.velocity={
+    x:(Math.random()-.5)*.9,
+    y:.8+Math.random()*.65,
+    z:1.15+Math.random()*.5
+  };
+
+  v.holder.removeAttribute('animation__selected');
+
+  v.holder.setAttribute(
+    'animation__selected',
+    'property: rotation; to: 0 0 720; dur: 700; easing: easeInQuad'
+  );
+
+  launches++;
+  $('score').textContent=String(launches).padStart(3,'0');
+
+  sound(all?240:340,.32,all?'square':'sawtooth',.1);
+
+  for(let i=0;i<12;i++){
+    spawnParticle(v.holder.object3D.position);
+  }
+
+  if(!all) toast(`${MODELS[id].name} LAUNCHED`);
+ }
+ function spawnParticle(pos){if(particles.length>130)return;const p=make('a-sphere',{radius:.004+Math.random()*.006,color:['#58e8ff','#ffd45b','#ff725e','#ffffff'][Math.floor(Math.random()*4)],opacity:.9,position:`${pos.x} ${pos.y} ${pos.z}`},$('projectiles'));particles.push({el:p,life:.45+Math.random()*.5,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,vz:Math.random()*.5})}
+ function update(t,dt){
+  const step=Math.min(dt||16,40)/1000;
+
+  Object.entries(entities).forEach(([id,v])=>{
+    if(v.mode!=='launched') return;
+
+    v.life+=step;
+
+    const p=v.holder.object3D.position;
+
+    p.x+=v.velocity.x*step;
+    p.y+=v.velocity.y*step;
+    p.z+=v.velocity.z*step;
+
+    v.velocity.y-=.55*step;
+
+    if(v.life>1.65){
+      v.mode='idle';
+      v.velocity=null;
+
+      v.holder.removeAttribute('animation__selected');
+      v.holder.setAttribute('position',MODELS[id].pos);
+      v.holder.setAttribute('rotation',MODELS[id].rot);
+    }
+  });
+
+  for(let i=particles.length-1;i>=0;i--){
+    const q=particles[i];
+
+    q.life-=step;
+
+    const p=q.el.object3D.position;
+
+    p.x+=q.vx*step;
+    p.y+=q.vy*step;
+    p.z+=q.vz*step;
+
+    q.el.object3D.scale.setScalar(Math.max(0,q.life));
+
+    if(q.life<=0){
+      q.el.remove();
+      particles.splice(i,1);
+    }
+  }
+ }
+ function reset(){
+  Object.entries(entities).forEach(([id,v])=>{
+    v.mode='idle';
+    v.velocity=null;
+
+    v.holder.removeAttribute('animation__selected');
+    v.holder.setAttribute('position',MODELS[id].pos);
+    v.holder.setAttribute('rotation',MODELS[id].rot);
+  });
+
+  launches=0;
+  $('score').textContent='000';
+
+  particles.forEach(p=>p.el.remove());
+  particles=[];
+
+  toast('FLOCK RESET · READY');
+  sound(520,.15,'sine',.05);
+ }
+ anchor.addEventListener('targetFound',()=>{
+  found=true;
+
+  if(!stageDetached){
+    anchor.object3D.updateMatrixWorld(true);
+    scene.object3D.attach(stage.object3D);
+    stageDetached=true;
+  }
+
+  $('status').textContent='FLOCK DEPLOYED · AR WORLD ONLINE';
+  $('reticle').style.opacity='0';
+
+  toast('TARGET ACQUIRED · WELCOME TO THE FLOCK');
+  sound(760,.22,'sine',.05);
+ });
+
+ anchor.addEventListener('targetLost',()=>{
+  found=false;
+
+  $('status').textContent='POSTER OUT OF VIEW · FLOCK STAYS ACTIVE';
+  $('reticle').style.opacity='0';
+ });
+ $('startBtn').addEventListener('click',async()=>{try{audio=new(window.AudioContext||window.webkitAudioContext)();await audio.resume();$('boot').style.display='none';$('interface').style.display='block';$('status').textContent='CAMERA STARTING…';await scene.systems['mindar-image-system'].start();}catch(err){$('boot').style.display='grid';toast('CAMERA ERROR · CHECK PERMISSIONS AND HTTPS');console.error(err)}});
+ document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>select(b.dataset.model)));$('launchBtn').addEventListener('click',()=>launch(selected));$('burstBtn').addEventListener('click',burst);$('resetBtn').addEventListener('click',reset);
+ scene.addEventListener('loaded',()=>{addEnvironment();createCharacters();});
+ AFRAME.registerComponent('ar-director',{tick:function(time,delta){if(!lastTick)lastTick=time;update(time,time-lastTick);lastTick=time;}});
+})();
 </script>
-</body>
-</html>
+</body></html>
